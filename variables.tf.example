@@ -1,0 +1,20 @@
+variable "aws" {
+  default = {
+    key_name = "your_key_name"
+    key_path = "~/your/key/path"
+    region = "us-east-1"
+    vpc_id = "vpc-deadbeef"
+    domain = "your.site.com"
+    zone_id = "YOUR_ZONE_ID"
+  }
+}
+
+variable "build_user" {
+  default = "YOUR_NAME"
+}
+
+variable "ami_ids" {
+  default = {
+    hvm = "ami-20d3fc4a" # ubuntu 14.04 hvm:ebs
+  }
+}

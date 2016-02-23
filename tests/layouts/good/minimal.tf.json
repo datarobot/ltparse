@@ -1,0 +1,79 @@
+{
+    "module": {
+        "default_security_group": {
+            "label": "default_security_group", 
+            "run_id": "${var.run_id}", 
+            "source": "modules/sgs/default", 
+            "vpc_id": "${var.aws.vpc_id}"
+        }
+    }, 
+    "provider": {
+        "aws": {
+            "region": "${var.aws.region}"
+        }
+    }, 
+    "resource": {
+        "aws_instance": {
+            "db": {
+                "ami": "${var.ami_ids.hvm}", 
+                "associate_public_ip_address": true, 
+                "availability_zone": "us-east-1a", 
+                "count": 1, 
+                "instance_type": "m3.large", 
+                "key_name": "${var.aws.key_name}", 
+                "subnet_id": "${terraform_remote_state.subnets.output.us-east-1a}", 
+                "tags": {
+                    "id": "db_${var.run_id}", 
+                    "label": "db", 
+                    "name": "enterprise_test", 
+                    "owner": "test_${var.run_id}", 
+                    "user": "${var.build_user}"
+                }, 
+                "vpc_security_group_ids": [
+                    "${module.default_security_group.id}"
+                ]
+            }, 
+            "proxy": {
+                "ami": "${var.ami_ids.hvm}", 
+                "associate_public_ip_address": true, 
+                "availability_zone": "us-east-1a", 
+                "count": 1, 
+                "instance_type": "m3.large", 
+                "key_name": "${var.aws.key_name}", 
+                "subnet_id": "${terraform_remote_state.subnets.output.us-east-1a}", 
+                "tags": {
+                    "id": "proxy_${var.run_id}", 
+                    "label": "proxy", 
+                    "name": "enterprise_test", 
+                    "owner": "test_${var.run_id}", 
+                    "user": "${var.build_user}"
+                }, 
+                "vpc_security_group_ids": [
+                    "${module.default_security_group.id}"
+                ]
+            }, 
+            "webserver": {
+                "ami": "${var.ami_ids.hvm}", 
+                "associate_public_ip_address": true, 
+                "availability_zone": "us-east-1a", 
+                "count": 1, 
+                "instance_type": "m3.large", 
+                "key_name": "${var.aws.key_name}", 
+                "subnet_id": "${terraform_remote_state.subnets.output.us-east-1a}", 
+                "tags": {
+                    "id": "webserver_${var.run_id}", 
+                    "label": "webserver", 
+                    "name": "enterprise_test", 
+                    "owner": "test_${var.run_id}", 
+                    "user": "${var.build_user}"
+                }, 
+                "vpc_security_group_ids": [
+                    "${module.default_security_group.id}"
+                ]
+            }
+        }
+    }, 
+    "variable": {
+        "run_id": {}
+    }
+}

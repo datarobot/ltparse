@@ -1,0 +1,8 @@
+resource "terraform_remote_state" "subnets" {
+    backend = "s3"
+    config {
+        region = "${var.aws.region}"
+        bucket = "YOUR_STATE_BUCKET"
+        key = "SUBNETS.tfstate"
+    }
+}

@@ -1,0 +1,12 @@
+.cache/*
+.eggs/*
+.terraform/*
+layout_parser.egg-info/
+build/*
+dist/*
+*/__pycache__/*
+*.pyc
+*.sw[lmnop]
+variables.tf
+remote-state.tf
+parsed.tf.json

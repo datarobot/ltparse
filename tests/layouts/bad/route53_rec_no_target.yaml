@@ -1,0 +1,9 @@
+---
+route53_records:
+- label: bad
+  domain: domain
+
+servers:
+- label: server
+
+expects: !!python/object/apply:ltparse.parser.ConfigurationError [route53 record label `bad` not applied to any instances or elbs]

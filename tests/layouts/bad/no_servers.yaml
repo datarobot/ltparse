@@ -1,0 +1,2 @@
+---
+expects: !!python/object/apply:ltparse.parser.ConfigurationError [No "servers" list in layout]

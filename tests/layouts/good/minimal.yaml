@@ -1,0 +1,14 @@
+---
+servers:
+- services:
+  - app
+  - nginx
+  label: webserver
+
+- services:
+  - proxy
+  label: proxy
+
+- services:
+  - mongo
+  label: db

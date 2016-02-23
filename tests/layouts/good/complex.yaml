@@ -1,0 +1,116 @@
+---
+dedicated_prediction_server: &adv_server
+  services:
+  - load-balanced-service
+  elb: elb2
+  instance_info: &adv_info
+    instance_type: r3.4xlarge
+    ami: ${var.ami_ids.hvm}
+    vpc_security_group_ids:
+    - public_security_group
+    - default_security_group
+    ebs_volumes:
+    - volume_size: 100
+      delete_on_termination: True
+      mountpoint: /opt
+      device_name: /dev/xvdz
+    - volume_size: 50
+      mountpoint: /mnt
+    - volume_size: 10
+    count: 1
+
+servers:
+- label: webserver
+  services:
+  - nginx
+  - app
+  route53_record: webserver
+  elb: webserver
+  instance_info:
+    instance_type: r3.xlarge
+    ami: ${var.ami_ids.hvm}
+    vpc_security_group_ids:
+    - public_security_group
+    - default_security_group
+
+- label: simple
+  services:
+  - worker
+  - broker
+
+- label: bigger
+  services:
+  - worker
+  - broker
+  instance_info:
+    instance_type: m2.4xlarge
+    count: 2
+
+- label: db
+  services:
+  - mongo
+  instance_info:
+    ebs_volumes:
+    - device_name: /dev/xvdf
+      volume_size: 500
+      delete_on_termination: True
+      mountpoint: /opt
+    availability_zone: us-east-1a
+
+- label: db
+  services:
+  - mongo
+  instance_info:
+    ebs_volumes:
+    - device_name: /dev/xvdf
+      volume_size: 500
+      delete_on_termination: True
+      mountpoint: /opt
+    availability_zone: us-east-1b
+
+  services:
+  - db
+  instance_info:
+    ebs_volumes:
+    - device_name: /dev/xvdf
+      volume_size: 500
+      delete_on_termination: True
+      mountpoint: /opt
+    availability_zone: us-east-1d
+    iam_instance_profile: s3only
+
+- label: adv_server1
+  <<: *adv_server
+  instance_info:
+    <<: *adv_info
+    availability_zone: us-east-1a
+  
+- label: adv_server2
+  <<: *adv_server
+  instance_info:
+    <<: *adv_info
+    availability_zone: us-east-1b
+  
+- label: adv_server3
+  <<: *adv_server
+  instance_info:
+    <<: *adv_info
+    availability_zone: us-east-1d
+  
+security_groups:
+- label: public_security_group
+  source: modules/sgs/public
+
+elbs:
+- label: elb2
+  route53_record: endpoint1
+- label: webserver
+
+route53_records:
+- label: webserver
+  public: True
+- label: endpoint1
+  public: False
+
+global_options:
+  remote_user: ubuntu

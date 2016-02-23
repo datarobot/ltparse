@@ -1,0 +1,391 @@
+{
+    "module": {
+        "default_security_group": {
+            "label": "default_security_group", 
+            "run_id": "${var.run_id}", 
+            "source": "modules/sgs/default", 
+            "vpc_id": "${var.aws.vpc_id}"
+        }, 
+        "public_security_group": {
+            "label": "public_security_group", 
+            "run_id": "${var.run_id}", 
+            "source": "modules/sgs/public", 
+            "vpc_id": "${var.aws.vpc_id}"
+        }
+    }, 
+    "provider": {
+        "aws": {
+            "region": "${var.aws.region}"
+        }
+    }, 
+    "resource": {
+        "aws_elb": {
+            "elb2": {
+                "health_check": {
+                    "healthy_threshold": 10, 
+                    "interval": 5, 
+                    "target": "HTTP:80/ping", 
+                    "timeout": 4, 
+                    "unhealthy_threshold": 2
+                }, 
+                "instances": [
+                    "${aws_instance.adv_server1.id}", 
+                    "${aws_instance.adv_server2.id}", 
+                    "${aws_instance.adv_server3.id}"
+                ], 
+                "internal": true, 
+                "listener": {
+                    "instance_port": 80, 
+                    "instance_protocol": "http", 
+                    "lb_port": 80, 
+                    "lb_protocol": "http"
+                }, 
+                "subnets": [
+                    "${terraform_remote_state.subnets.output.us-east-1a}", 
+                    "${terraform_remote_state.subnets.output.us-east-1b}", 
+                    "${terraform_remote_state.subnets.output.us-east-1d}"
+                ], 
+                "tags": {
+                    "Name": "enterprise-test-${var.run_id}"
+                }
+            }, 
+            "webserver": {
+                "health_check": {
+                    "healthy_threshold": 10, 
+                    "interval": 5, 
+                    "target": "HTTP:80/ping", 
+                    "timeout": 4, 
+                    "unhealthy_threshold": 2
+                }, 
+                "instances": [
+                    "${aws_instance.webserver.id}"
+                ], 
+                "internal": true, 
+                "listener": {
+                    "instance_port": 80, 
+                    "instance_protocol": "http", 
+                    "lb_port": 80, 
+                    "lb_protocol": "http"
+                }, 
+                "subnets": [
+                    "${terraform_remote_state.subnets.output.us-east-1a}", 
+                    "${terraform_remote_state.subnets.output.us-east-1b}", 
+                    "${terraform_remote_state.subnets.output.us-east-1d}"
+                ], 
+                "tags": {
+                    "Name": "enterprise-test-${var.run_id}"
+                }
+            }
+        }, 
+        "aws_instance": {
+            "adv_server1": {
+                "ami": "${var.ami_ids.hvm}", 
+                "associate_public_ip_address": true, 
+                "availability_zone": "us-east-1a", 
+                "count": 1, 
+                "ebs_block_device": [
+                    {
+                        "delete_on_termination": true, 
+                        "device_name": "/dev/xvdz", 
+                        "volume_size": 100
+                    }, 
+                    {
+                        "device_name": "/dev/xvdg", 
+                        "volume_size": 50
+                    }, 
+                    {
+                        "device_name": "/dev/xvdh", 
+                        "volume_size": 10
+                    }
+                ], 
+                "instance_type": "m3.large", 
+                "key_name": "${var.aws.key_name}", 
+                "provisioner": [
+                    {
+                        "remote-exec": {
+                            "connection": {
+                                "host": "${aws_instance.adv_server1.private_ip}", 
+                                "private_key": "${file(\"${var.aws.your_key_path}\")}", 
+                                "user": "ubuntu"
+                            }, 
+                            "inline": [
+                                "sudo mkfs -F -t ext4 /dev/xvdz", 
+                                "sudo mount /dev/xvdz /opt"
+                            ]
+                        }
+                    }, 
+                    {
+                        "remote-exec": {
+                            "connection": {
+                                "host": "${aws_instance.adv_server1.private_ip}", 
+                                "private_key": "${file(\"${var.aws.your_key_path}\")}", 
+                                "user": "ubuntu"
+                            }, 
+                            "inline": [
+                                "sudo mkfs -F -t ext4 /dev/xvdg", 
+                                "sudo mount /dev/xvdg /mnt"
+                            ]
+                        }
+                    }
+                ], 
+                "subnet_id": "${terraform_remote_state.subnets.output.us-east-1a}", 
+                "tags": {
+                    "id": "adv_server1_${var.run_id}", 
+                    "label": "adv_server1", 
+                    "name": "enterprise_test", 
+                    "owner": "test_${var.run_id}", 
+                    "user": "${var.build_user}"
+                }, 
+                "vpc_security_group_ids": [
+                    "${module.default_security_group.id}"
+                ]
+            }, 
+            "adv_server2": {
+                "ami": "${var.ami_ids.hvm}", 
+                "associate_public_ip_address": true, 
+                "availability_zone": "us-east-1a", 
+                "count": 1, 
+                "ebs_block_device": [
+                    {
+                        "delete_on_termination": true, 
+                        "device_name": "/dev/xvdz", 
+                        "volume_size": 100
+                    }, 
+                    {
+                        "device_name": "/dev/xvdg", 
+                        "volume_size": 50
+                    }, 
+                    {
+                        "device_name": "/dev/xvdh", 
+                        "volume_size": 10
+                    }
+                ], 
+                "instance_type": "m3.large", 
+                "key_name": "${var.aws.key_name}", 
+                "provisioner": [
+                    {
+                        "remote-exec": {
+                            "connection": {
+                                "host": "${aws_instance.adv_server2.private_ip}", 
+                                "private_key": "${file(\"${var.aws.your_key_path}\")}", 
+                                "user": "ubuntu"
+                            }, 
+                            "inline": [
+                                "sudo mkfs -F -t ext4 /dev/xvdz", 
+                                "sudo mount /dev/xvdz /opt"
+                            ]
+                        }
+                    }, 
+                    {
+                        "remote-exec": {
+                            "connection": {
+                                "host": "${aws_instance.adv_server2.private_ip}", 
+                                "private_key": "${file(\"${var.aws.your_key_path}\")}", 
+                                "user": "ubuntu"
+                            }, 
+                            "inline": [
+                                "sudo mkfs -F -t ext4 /dev/xvdg", 
+                                "sudo mount /dev/xvdg /mnt"
+                            ]
+                        }
+                    }
+                ], 
+                "subnet_id": "${terraform_remote_state.subnets.output.us-east-1b}", 
+                "tags": {
+                    "id": "adv_server2_${var.run_id}", 
+                    "label": "adv_server2", 
+                    "name": "enterprise_test", 
+                    "owner": "test_${var.run_id}", 
+                    "user": "${var.build_user}"
+                }, 
+                "vpc_security_group_ids": [
+                    "${module.default_security_group.id}"
+                ]
+            }, 
+            "adv_server3": {
+                "ami": "${var.ami_ids.hvm}", 
+                "associate_public_ip_address": true, 
+                "availability_zone": "us-east-1a", 
+                "count": 1, 
+                "ebs_block_device": [
+                    {
+                        "delete_on_termination": true, 
+                        "device_name": "/dev/xvdz", 
+                        "volume_size": 100
+                    }, 
+                    {
+                        "device_name": "/dev/xvdg", 
+                        "volume_size": 50
+                    }, 
+                    {
+                        "device_name": "/dev/xvdh", 
+                        "volume_size": 10
+                    }
+                ], 
+                "instance_type": "m3.large", 
+                "key_name": "${var.aws.key_name}", 
+                "provisioner": [
+                    {
+                        "remote-exec": {
+                            "connection": {
+                                "host": "${aws_instance.adv_server3.private_ip}", 
+                                "private_key": "${file(\"${var.aws.your_key_path}\")}", 
+                                "user": "ubuntu"
+                            }, 
+                            "inline": [
+                                "sudo mkfs -F -t ext4 /dev/xvdz", 
+                                "sudo mount /dev/xvdz /opt"
+                            ]
+                        }
+                    }, 
+                    {
+                        "remote-exec": {
+                            "connection": {
+                                "host": "${aws_instance.adv_server3.private_ip}", 
+                                "private_key": "${file(\"${var.aws.your_key_path}\")}", 
+                                "user": "ubuntu"
+                            }, 
+                            "inline": [
+                                "sudo mkfs -F -t ext4 /dev/xvdg", 
+                                "sudo mount /dev/xvdg /mnt"
+                            ]
+                        }
+                    }
+                ], 
+                "subnet_id": "${terraform_remote_state.subnets.output.us-east-1d}", 
+                "tags": {
+                    "id": "adv_server3_${var.run_id}", 
+                    "label": "adv_server3", 
+                    "name": "enterprise_test", 
+                    "owner": "test_${var.run_id}", 
+                    "user": "${var.build_user}"
+                }, 
+                "vpc_security_group_ids": [
+                    "${module.default_security_group.id}"
+                ]
+            }, 
+            "bigger": {
+                "ami": "${var.ami_ids.hvm}", 
+                "associate_public_ip_address": true, 
+                "availability_zone": "us-east-1a", 
+                "count": 2, 
+                "instance_type": "m3.large", 
+                "key_name": "${var.aws.key_name}", 
+                "subnet_id": "${terraform_remote_state.subnets.output.us-east-1a}", 
+                "tags": {
+                    "id": "bigger_${var.run_id}", 
+                    "label": "bigger", 
+                    "name": "enterprise_test", 
+                    "owner": "test_${var.run_id}", 
+                    "user": "${var.build_user}"
+                }, 
+                "vpc_security_group_ids": [
+                    "${module.default_security_group.id}"
+                ]
+            }, 
+            "db": {
+                "ami": "${var.ami_ids.hvm}", 
+                "associate_public_ip_address": true, 
+                "availability_zone": "us-east-1a", 
+                "count": 1, 
+                "ebs_block_device": [
+                    {
+                        "delete_on_termination": true, 
+                        "device_name": "/dev/xvdf", 
+                        "volume_size": 500
+                    }
+                ], 
+                "iam_instance_profile": "s3only", 
+                "instance_type": "m3.large", 
+                "key_name": "${var.aws.key_name}", 
+                "provisioner": [
+                    {
+                        "remote-exec": {
+                            "connection": {
+                                "host": "${aws_instance.db.private_ip}", 
+                                "private_key": "${file(\"${var.aws.your_key_path}\")}", 
+                                "user": "ubuntu"
+                            }, 
+                            "inline": [
+                                "sudo mkfs -F -t ext4 /dev/xvdf", 
+                                "sudo mount /dev/xvdf /opt"
+                            ]
+                        }
+                    }
+                ], 
+                "subnet_id": "${terraform_remote_state.subnets.output.us-east-1d}", 
+                "tags": {
+                    "id": "db_${var.run_id}", 
+                    "label": "db", 
+                    "name": "enterprise_test", 
+                    "owner": "test_${var.run_id}", 
+                    "user": "${var.build_user}"
+                }, 
+                "vpc_security_group_ids": [
+                    "${module.default_security_group.id}"
+                ]
+            }, 
+            "simple": {
+                "ami": "${var.ami_ids.hvm}", 
+                "associate_public_ip_address": true, 
+                "availability_zone": "us-east-1a", 
+                "count": 1, 
+                "instance_type": "m3.large", 
+                "key_name": "${var.aws.key_name}", 
+                "subnet_id": "${terraform_remote_state.subnets.output.us-east-1a}", 
+                "tags": {
+                    "id": "simple_${var.run_id}", 
+                    "label": "simple", 
+                    "name": "enterprise_test", 
+                    "owner": "test_${var.run_id}", 
+                    "user": "${var.build_user}"
+                }, 
+                "vpc_security_group_ids": [
+                    "${module.default_security_group.id}"
+                ]
+            }, 
+            "webserver": {
+                "ami": "${var.ami_ids.hvm}", 
+                "associate_public_ip_address": true, 
+                "availability_zone": "us-east-1a", 
+                "count": 1, 
+                "instance_type": "m3.large", 
+                "key_name": "${var.aws.key_name}", 
+                "subnet_id": "${terraform_remote_state.subnets.output.us-east-1a}", 
+                "tags": {
+                    "id": "webserver_${var.run_id}", 
+                    "label": "webserver", 
+                    "name": "enterprise_test", 
+                    "owner": "test_${var.run_id}", 
+                    "user": "${var.build_user}"
+                }, 
+                "vpc_security_group_ids": [
+                    "${module.default_security_group.id}"
+                ]
+            }
+        }, 
+        "aws_route53_record": {
+            "endpoint1": {
+                "name": "${var.run_id}-endpoint1", 
+                "records": [
+                    "${aws_elb.elb2.dns_name}"
+                ], 
+                "ttl": 300, 
+                "type": "CNAME", 
+                "zone_id": "${var.aws.zone_id}"
+            }, 
+            "webserver": {
+                "name": "${var.run_id}-webserver", 
+                "records": [
+                    "${aws_instance.webserver.public_ip}"
+                ], 
+                "ttl": 300, 
+                "type": "A", 
+                "zone_id": "${var.aws.zone_id}"
+            }
+        }
+    }, 
+    "variable": {
+        "run_id": {}
+    }
+}
